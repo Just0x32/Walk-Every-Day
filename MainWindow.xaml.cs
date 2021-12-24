@@ -29,9 +29,33 @@ namespace Walk_Every_Day
             viewModel = new ViewModel();
         }
 
+        private void HandleError()
+        {
+            if (viewModel.IsFileReadingError)
+                MessageBox.Show("File reading error!");
+
+            if (viewModel.IsInputDataWrong)
+                MessageBox.Show("Input data is wrong!");
+
+            if (viewModel.IsDayParsingError)
+                MessageBox.Show("Day parsing error!");
+        }
+
         private void LoadDataButton_Click(object sender, RoutedEventArgs e)
         {
+            viewModel.GetData();
 
+            if (viewModel.IsError)
+            {
+                HandleError();
+            }
+            else
+            {
+                //  Create graph and list
+            }
+
+            MessageBox.Show(viewModel.ShowInputAllDaysData());                          // Debug
+            MessageBox.Show(viewModel.ShowOutputAllUsersData());                          // Debug
         }
 
         private void ExportDataButton_Click(object sender, RoutedEventArgs e)
