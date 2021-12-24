@@ -5,8 +5,34 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Walk_Every_Day"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Walk every day" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" >
     <Grid>
+        <StackPanel>
+            <Border x:Name="GraphBorder"
+                    Width="300" Height="200"
+                    Margin="20"
+                    Background="AliceBlue">
+
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Graph"/>
+            </Border>
+
+            <Border x:Name="UserListBorder"
+                    Width="300" Height="100"
+                    Margin="20 0 20 20"
+                    Background="AliceBlue">
+
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="User List"/>
+            </Border>
+
+            <Button x:Name="LoadDataButton" Click="LoadDataButton_Click"
+                    Margin="20 0 20 20"
+                    Content="Load users data"/>
+
+            <Button x:Name="ExportDataButton" Click="ExportDataButton_Click"
+                    Margin="20 0 20 20"
+                    Content="Export selected user data"/>
+
+        </StackPanel>
 
     </Grid>
 </Window>

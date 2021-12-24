@@ -8,5 +8,11 @@ namespace Walk_Every_Day
 {
     class Model
     {
+
+
+        public Model()
+        {
+
+        }
     }
 }

@@ -20,9 +20,23 @@ namespace Walk_Every_Day
     /// </summary>
     public partial class MainWindow : Window
     {
+        ViewModel viewModel;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            viewModel = new ViewModel();
+        }
+
+        private void LoadDataButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ExportDataButton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

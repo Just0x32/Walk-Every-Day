@@ -8,5 +8,11 @@ namespace Walk_Every_Day
 {
     class ViewModel
     {
+        Model model;
+
+        public ViewModel()
+        {
+            model = new Model();
+        }
     }
 }
