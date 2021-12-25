@@ -26,6 +26,8 @@ namespace Walk_Every_Day
 
         public void GetData() => model.GetData();
 
+        public void SendFilePaths(string[] filePaths) => model.GetFilePaths(filePaths);
+
         public string ShowInputAllDaysData()             // Debug
         {
             StringBuilder inputData = new StringBuilder();

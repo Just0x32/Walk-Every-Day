@@ -10,17 +10,12 @@ namespace Walk_Every_Day
 {
     class Model
     {
-        private List<string> filePaths = new List<string>();
+        private List<string> filePaths;
 
-        private List<List<InputDayDataItem>> inputAllDaysData = new List<List<InputDayDataItem>>();
-        private List<OutputUserDataItem> outputAllUsersData = new List<OutputUserDataItem>();
+        private List<List<InputDayDataItem>> inputAllDaysData;
+        private List<OutputUserDataItem> outputAllUsersData;
 
-        public Model()
-        {
-            filePaths.Add(@"E:\Developments\C#\repos\Walk-Every-Day\TestData\day1.json");           // read two files
-            filePaths.Add(@"E:\Developments\C#\repos\Walk-Every-Day\TestData\day2.json");           //
-
-        }
+        public Model() { }
 
         public bool IsError() => IsFileReadingError | IsInputDataWrong | IsDayParsingError;
 
@@ -34,12 +29,35 @@ namespace Walk_Every_Day
 
         public List<OutputUserDataItem> OutputAllUsersData { get => outputAllUsersData; }     // Debug
 
+        private void ResetAllDataStructures()
+        {
+            filePaths = new List<string>();
+            inputAllDaysData = new List<List<InputDayDataItem>>();
+            outputAllUsersData = new List<OutputUserDataItem>();
+        }
+
+        public void GetFilePaths(string[] filePaths)
+        {
+            if (filePaths != null)
+            {
+                ResetAllDataStructures();
+
+                foreach (var item in filePaths)
+                {
+                    this.filePaths.Add(item);
+                }
+            }
+        }
+
         public void GetData()
         {
-            ResetErrors();
+            if (filePaths != null && filePaths.Count > 0)
+            {
+                ResetErrors();
 
-            ReadDataFiles();
-            ConvertDataStructure();
+                ReadDataFiles();
+                ConvertDataStructure();
+            }
 
             void ResetErrors()
             {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,21 +42,33 @@ namespace Walk_Every_Day
                 MessageBox.Show("Day parsing error!");
         }
 
+        private void SendFilePaths(string[] filePaths) => viewModel.SendFilePaths(filePaths);
+
         private void LoadDataButton_Click(object sender, RoutedEventArgs e)
         {
-            viewModel.GetData();
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "JSON files (*.json)|*.json";
+            openFileDialog.Multiselect = true;
 
-            if (viewModel.IsError)
-            {
-                HandleError();
-            }
-            else
-            {
-                //  Create graph and list
-            }
 
-            MessageBox.Show(viewModel.ShowInputAllDaysData());                          // Debug
-            MessageBox.Show(viewModel.ShowOutputAllUsersData());                          // Debug
+            if (openFileDialog.ShowDialog() == true)
+            {
+                SendFilePaths(openFileDialog.FileNames);
+
+                viewModel.GetData();
+
+                if (viewModel.IsError)
+                {
+                    HandleError();
+                }
+                else
+                {
+                    //  Create graph and list
+                }
+
+                MessageBox.Show(viewModel.ShowInputAllDaysData());                          // Debug
+                MessageBox.Show(viewModel.ShowOutputAllUsersData());                          // Debug
+            }
         }
 
         private void ExportDataButton_Click(object sender, RoutedEventArgs e)
