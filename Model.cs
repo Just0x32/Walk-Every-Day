@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Walk_Every_Day.DataTypes;
 
 namespace Walk_Every_Day
 {
@@ -27,8 +28,6 @@ namespace Walk_Every_Day
 
         public List<List<InputDayDataItem>> InputAllDaysData { get => inputAllDaysData; }     // Debug
 
-        public List<OutputUserDataItem> OutputAllUsersData { get => outputAllUsersData; }     // Debug
-
         private void ResetAllDataStructures()
         {
             filePaths = new List<string>();
@@ -49,7 +48,7 @@ namespace Walk_Every_Day
             }
         }
 
-        public void GetData()
+        public List<OutputUserDataItem> GetData()
         {
             if (filePaths != null && filePaths.Count > 0)
             {
@@ -57,7 +56,10 @@ namespace Walk_Every_Day
 
                 ReadDataFiles();
                 ConvertDataStructure();
+                CalculateAverageMaxAndMinSteps();
             }
+
+            return outputAllUsersData;
 
             void ResetErrors()
             {
@@ -151,20 +153,57 @@ namespace Walk_Every_Day
 
                 int lastIndex = outputAllUsersData.Count - 1;
                 outputAllUsersData[lastIndex].User = userName;
-                outputAllUsersData[lastIndex].UserDayDataList = new List<UserDayData>();
+                outputAllUsersData[lastIndex].UserDayDataList = new List<OutputUserDataItem.UserDayData>();
 
                 return lastIndex;
             }
 
             void AddOutputUserDayData(int outputIndexOfUser, int dayNumberm, int inputRank, string inputStatus, int inputSteps)
             {
-                outputAllUsersData[outputIndexOfUser].UserDayDataList.Add(new UserDayData());
+                outputAllUsersData[outputIndexOfUser].UserDayDataList.Add(new OutputUserDataItem.UserDayData());
                 int outputLastIndex = outputAllUsersData[outputIndexOfUser].UserDayDataList.Count - 1;
 
                 outputAllUsersData[outputIndexOfUser].UserDayDataList[outputLastIndex].Day = dayNumber;
                 outputAllUsersData[outputIndexOfUser].UserDayDataList[outputLastIndex].Rank = inputRank;
                 outputAllUsersData[outputIndexOfUser].UserDayDataList[outputLastIndex].Status = inputStatus;
                 outputAllUsersData[outputIndexOfUser].UserDayDataList[outputLastIndex].Steps = inputSteps;
+            }
+        }
+
+        private void CalculateAverageMaxAndMinSteps()
+        {
+            int sumOfSteps;
+            int dayCount;
+            int maxSteps;
+            int minSteps;
+
+            for (int i = 0; i < outputAllUsersData.Count; i++)
+            {
+                ResetStepsVariables();
+
+                foreach (var userDayData in outputAllUsersData[i].UserDayDataList)
+                {
+                    if (userDayData.Steps > maxSteps)
+                        maxSteps = userDayData.Steps;
+
+                    if (userDayData.Steps < minSteps)
+                        minSteps = userDayData.Steps;
+
+                    sumOfSteps += userDayData.Steps;
+                    dayCount++;
+                }
+
+                outputAllUsersData[i].AverageSteps = sumOfSteps / dayCount;
+                outputAllUsersData[i].MaxSteps = maxSteps;
+                outputAllUsersData[i].MinSteps = minSteps;
+            }
+
+            void ResetStepsVariables()
+            {
+                sumOfSteps = 0;
+                dayCount = 0;
+                maxSteps = Int32.MinValue;
+                minSteps = Int32.MaxValue;
             }
         }
 
@@ -195,42 +234,6 @@ namespace Walk_Every_Day
             }
 
             return dayDataItems;
-        }
-
-        public class InputDayDataItem
-        {
-            public int Rank { get; set; }
-
-            public string User { get; set; }
-
-            public string Status { get; set; }
-
-            public int Steps { get; set; }
-        }
-
-        public class OutputUserDataItem
-        {
-            public string User { get; set; }
-
-            public int AverageSteps { get; set; }
-
-            public int MaxSteps { get; set; }
-
-            public int MinSteps { get; set; }
-
-            public List<UserDayData> UserDayDataList { get; set; }
-
-        }
-
-        public class UserDayData
-        {
-            public int Day { get; set; }
-
-            public int Rank { get; set; }
-
-            public string Status { get; set; }
-
-            public int Steps { get; set; }
         }
     }
 }

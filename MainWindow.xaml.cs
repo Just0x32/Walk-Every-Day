@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Walk_Every_Day.DataTypes;
 
 namespace Walk_Every_Day
 {
@@ -22,6 +23,8 @@ namespace Walk_Every_Day
     public partial class MainWindow : Window
     {
         ViewModel viewModel;
+
+        List<OutputUserDataItem> usersData;
 
         public MainWindow()
         {
@@ -55,25 +58,52 @@ namespace Walk_Every_Day
             {
                 SendFilePaths(openFileDialog.FileNames);
 
-                viewModel.GetData();
+                usersData = viewModel.GetData();
 
                 if (viewModel.IsError)
                 {
                     HandleError();
                 }
-                else
+                else if (usersData != null)
                 {
+                    MessageBox.Show(ShowUsersData());               // Debug
+
                     //  Create graph and list
+
                 }
 
                 MessageBox.Show(viewModel.ShowInputAllDaysData());                          // Debug
-                MessageBox.Show(viewModel.ShowOutputAllUsersData());                          // Debug
             }
         }
 
         private void ExportDataButton_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private string ShowUsersData()             // Debug
+        {
+            StringBuilder outputData = new StringBuilder();
+
+            outputData.AppendLine("Output data");
+
+            for (int i = 0; i < 7/*OutputAllUsersData.Count*/; i++)
+            {
+                outputData.Append(Environment.NewLine + Environment.NewLine + "User: " + usersData[i].User);
+                outputData.Append(Environment.NewLine + "AverageSteps: " + usersData[i].AverageSteps);
+                outputData.Append(Environment.NewLine + "MaxSteps: " + usersData[i].MaxSteps);
+                outputData.Append(Environment.NewLine + "MinSteps: " + usersData[i].MinSteps);
+
+                for (int j = 0; j < usersData[i].UserDayDataList.Count; j++)
+                {
+                    outputData.Append(Environment.NewLine + "Day: " + usersData[i].UserDayDataList[j].Day);
+                    outputData.Append("     Rank: " + usersData[i].UserDayDataList[j].Rank);
+                    outputData.Append("     Status: " + usersData[i].UserDayDataList[j].Status);
+                    outputData.Append("     Steps: " + usersData[i].UserDayDataList[j].Steps);
+                }
+            }
+
+            return outputData.ToString();
         }
     }
 }
