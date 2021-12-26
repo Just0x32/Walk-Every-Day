@@ -23,9 +23,16 @@ namespace Walk_Every_Day
     public partial class MainWindow : Window
     {
         private ViewModel viewModel;
-        private List<OutputUserDataItem> usersData;
 
-        private int stepsDeviation;
+        private List<OutputUserDataItem> usersData;
+        List<ExtendedItem> extendedList;
+
+        private readonly Color defaultDeviationAtMaxColor = Colors.Green;
+        private readonly Color defaultDeviationAtMinColor = Colors.Red;
+        private readonly Color defaultDeviationAtMaxAndMinColor = Colors.Blue;
+        private readonly Color defaultDeviationAtNoneColor = Colors.Transparent;
+
+        private int stepsDeviationInProcents;
         private readonly int defaultStepsDeviation = 20;
         private readonly int defaultMinStepsDeviation = 5;
         private readonly int defaultMaxStepsDeviation = 95;
@@ -38,19 +45,12 @@ namespace Walk_Every_Day
 
             viewModel = new ViewModel();
 
-
+            UserListListBox.SelectionChanged += UserListListBox_SelectionChanged;
 
 
         }
 
-        class S
-        {
-            public string User { get; set; }
-            public string AverageSteps { get; set; }
-            public string MaxSteps { get; set; }
-            public string MinSteps { get; set; }
-        }
-
+        private int UserListSelectedIndex { get => UserListListBox.SelectedIndex; }
 
         private void HandleError()
         {
@@ -86,7 +86,8 @@ namespace Walk_Every_Day
                 {
                     //MessageBox.Show(ShowUsersData());               // Debug
 
-                    UserListListBox.ItemsSource = usersData;
+                    UserListListBox.ItemsSource = MakeUserList(usersData);
+
 
                     //  Create list events and graph 
 
@@ -96,7 +97,75 @@ namespace Walk_Every_Day
             }
         }
 
+        private List<ExtendedItem> MakeUserList(List<OutputUserDataItem> usersData)
+        {
+            if (usersData != null)
+            {
+                extendedList = new List<ExtendedItem>();
 
+                foreach (var item in usersData)
+                {
+                    extendedList.Add(new ExtendedItem
+                    {
+                        User = item.User,
+                        AverageSteps = item.AverageSteps,
+                        MaxSteps = item.MaxSteps,
+                        MinSteps = item.MinSteps,
+                        UserDayDataList = item.UserDayDataList,
+                        BackgroundColor = GetBackgroundColor(item.AverageSteps, item.MaxSteps, item.MinSteps)
+                    });
+                }
+            }
+
+            return extendedList;
+
+            string GetBackgroundColor(int averageSteps, int maxSteps, int minSteps)
+            {
+                bool isMaxStepsDeviation = false;
+                bool isMinStepsDeviation = false;
+
+                int absoluteDeviation = (int)((float)averageSteps * (float)stepsDeviationInProcents / 100f);
+
+                if ((maxSteps - averageSteps) > absoluteDeviation)
+                    isMaxStepsDeviation = true;
+
+                if ((averageSteps - minSteps) > absoluteDeviation)
+                    isMinStepsDeviation = true;
+
+                if (isMaxStepsDeviation && isMinStepsDeviation)
+                {
+                    return defaultDeviationAtMaxAndMinColor.ToString();
+                }
+                else if (isMaxStepsDeviation)
+                {
+                    return defaultDeviationAtMaxColor.ToString();
+                }
+                else if (isMinStepsDeviation)
+                {
+                    return defaultDeviationAtMinColor.ToString();
+                }
+                else
+                {
+                    return defaultDeviationAtNoneColor.ToString();
+                }
+            }
+        }
+
+        private void UserListListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+            if (UserListSelectedIndex >= 0)
+            {
+                //GraphTextBox.Text = UserListSelectedIndex.ToString();                                           // Debug
+
+                // Create graph
+            }
+            else
+            {
+                // Clear graph
+            }
+
+        }
 
         private void ExportDataButton_Click(object sender, RoutedEventArgs e)
         {
@@ -113,8 +182,10 @@ namespace Walk_Every_Day
             }
             else
             {
-                SetStepsDeviationValue(stepsDeviation);
+                SetStepsDeviationValue(stepsDeviationInProcents);
             }
+
+            UserListListBox.ItemsSource = MakeUserList(usersData);
 
             int ReturnValidStepsDeviationValue(int value)
             {
@@ -135,8 +206,8 @@ namespace Walk_Every_Day
 
         private void SetStepsDeviationValue(int value)
         {
-            stepsDeviation = value;
-            DeviationTextBox.Text = stepsDeviation.ToString();
+            stepsDeviationInProcents = value;
+            DeviationTextBox.Text = stepsDeviationInProcents.ToString();
         }
 
         private string ShowUsersData()             // Debug
@@ -162,6 +233,11 @@ namespace Walk_Every_Day
             }
 
             return outputData.ToString();
+        }
+
+        public class ExtendedItem : OutputUserDataItem
+        {
+            public string BackgroundColor { get; set; }
         }
     }
 }
