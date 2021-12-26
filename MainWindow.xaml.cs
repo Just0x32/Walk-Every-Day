@@ -22,16 +22,35 @@ namespace Walk_Every_Day
     /// </summary>
     public partial class MainWindow : Window
     {
-        ViewModel viewModel;
+        private ViewModel viewModel;
+        private List<OutputUserDataItem> usersData;
 
-        List<OutputUserDataItem> usersData;
+        private int stepsDeviation;
+        private readonly int defaultStepsDeviation = 20;
+        private readonly int defaultMinStepsDeviation = 5;
+        private readonly int defaultMaxStepsDeviation = 95;
 
         public MainWindow()
         {
             InitializeComponent();
 
+            SetStepsDeviationValue(defaultStepsDeviation);
+
             viewModel = new ViewModel();
+
+
+
+
         }
+
+        class S
+        {
+            public string User { get; set; }
+            public string AverageSteps { get; set; }
+            public string MaxSteps { get; set; }
+            public string MinSteps { get; set; }
+        }
+
 
         private void HandleError()
         {
@@ -53,7 +72,6 @@ namespace Walk_Every_Day
             openFileDialog.Filter = "JSON files (*.json)|*.json";
             openFileDialog.Multiselect = true;
 
-
             if (openFileDialog.ShowDialog() == true)
             {
                 SendFilePaths(openFileDialog.FileNames);
@@ -66,19 +84,59 @@ namespace Walk_Every_Day
                 }
                 else if (usersData != null)
                 {
-                    MessageBox.Show(ShowUsersData());               // Debug
+                    //MessageBox.Show(ShowUsersData());               // Debug
 
-                    //  Create graph and list
+                    UserListListBox.ItemsSource = usersData;
+
+                    //  Create list events and graph 
 
                 }
 
-                MessageBox.Show(viewModel.ShowInputAllDaysData());                          // Debug
+                //MessageBox.Show(viewModel.ShowInputAllDaysData());                          // Debug
             }
         }
+
+
 
         private void ExportDataButton_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void DeviationSetButton_Click(object sender, RoutedEventArgs e)
+        {
+            int textBoxValue;
+
+            if (Int32.TryParse(DeviationTextBox.Text, out textBoxValue))
+            {
+                SetStepsDeviationValue(ReturnValidStepsDeviationValue(textBoxValue));
+            }
+            else
+            {
+                SetStepsDeviationValue(stepsDeviation);
+            }
+
+            int ReturnValidStepsDeviationValue(int value)
+            {
+                if (value < defaultMinStepsDeviation)
+                {
+                    return defaultMinStepsDeviation;
+                }
+                else if (value > defaultMaxStepsDeviation)
+                {
+                    return defaultMaxStepsDeviation;
+                }
+                else
+                {
+                    return value;
+                }
+            }
+        }
+
+        private void SetStepsDeviationValue(int value)
+        {
+            stepsDeviation = value;
+            DeviationTextBox.Text = stepsDeviation.ToString();
         }
 
         private string ShowUsersData()             // Debug
