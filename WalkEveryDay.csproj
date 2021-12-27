@@ -5,6 +5,11 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <RootNamespace>Walk_Every_Day</RootNamespace>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>WalkEveryDay.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LiveCharts.Wpf.Core" Version="0.9.8" />
+  </ItemGroup>
 
 </Project>

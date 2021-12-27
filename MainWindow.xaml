@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Walk_Every_Day"
         mc:Ignorable="d"
-        Title="Walk every day" MinWidth="1000" MinHeight="600" Width="1000" Height="600" SizeToContent="Width" WindowStartupLocation="CenterScreen" >
+        Title="Walk every day" MinWidth="1000" MinHeight="600" Width="1000" Height="600" WindowStartupLocation="CenterScreen" >
     <Window.Resources>
         <Style x:Key="ListBoxHeaderBorder">
             <Setter Property="Border.Height" Value="27"/>
@@ -179,8 +179,43 @@
         <Border x:Name="GraphBorder"
                 Grid.Column="1" Grid.Row="0"
                 Margin="20"
-                Background="AliceBlue">
-            <TextBlock x:Name="GraphTextBox" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Graph"/>
+                >
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                           Margin="0 0 30 0"
+                           Text="Steps">
+                    <TextBlock.LayoutTransform>
+                        <TransformGroup>
+                            <RotateTransform Angle="-90"/>
+                        </TransformGroup>
+                    </TextBlock.LayoutTransform>
+                </TextBlock>
+
+                <Grid x:Name="ColumnValuesGrid"
+                          Grid.Row="0" Grid.Column="1"/>
+
+                <Grid x:Name="GraphGrid"
+                          Grid.Row="0" Grid.Column="2"/>
+
+                <Grid x:Name="RowValuesGrid"
+                          Grid.Row="1" Grid.Column="3"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="3"
+                           HorizontalAlignment="Center"
+                           Margin="0 20 0 0"
+                           Text="Days"/>
+            </Grid>
         </Border>
 
         <Grid Grid.Column="1" Grid.Row="1">

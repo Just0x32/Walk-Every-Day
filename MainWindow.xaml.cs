@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Walk_Every_Day.DataTypes;
+using Walk_Every_Day.GraphTypes;
 
 namespace Walk_Every_Day
 {
@@ -27,9 +28,9 @@ namespace Walk_Every_Day
         private List<OutputUserDataItem> usersData;
         List<ExtendedItem> extendedList;
 
-        private readonly Color defaultDeviationAtMaxColor = Colors.Green;
-        private readonly Color defaultDeviationAtMinColor = Colors.Red;
-        private readonly Color defaultDeviationAtMaxAndMinColor = Colors.Blue;
+        private readonly Color defaultDeviationAtMaxColor = Colors.LightGreen;
+        private readonly Color defaultDeviationAtMinColor = Colors.PaleVioletRed;
+        private readonly Color defaultDeviationAtMaxAndMinColor = Colors.PowderBlue;
         private readonly Color defaultDeviationAtNoneColor = Colors.Transparent;
 
         private int stepsDeviationInProcents;
@@ -57,6 +58,9 @@ namespace Walk_Every_Day
             if (viewModel.IsFileReadingError)
                 MessageBox.Show("File reading error!");
 
+            if (viewModel.IsFileWritingError)
+                MessageBox.Show("File writing error!");
+
             if (viewModel.IsInputDataWrong)
                 MessageBox.Show("Input data is wrong!");
 
@@ -64,7 +68,7 @@ namespace Walk_Every_Day
                 MessageBox.Show("Day parsing error!");
         }
 
-        private void SendFilePaths(string[] filePaths) => viewModel.SendFilePaths(filePaths);
+        private void SendInputFilePaths(string[] filePaths) => viewModel.SendFilePaths(filePaths);
 
         private void LoadDataButton_Click(object sender, RoutedEventArgs e)
         {
@@ -74,7 +78,7 @@ namespace Walk_Every_Day
 
             if (openFileDialog.ShowDialog() == true)
             {
-                SendFilePaths(openFileDialog.FileNames);
+                SendInputFilePaths(openFileDialog.FileNames);
 
                 usersData = viewModel.GetData();
 
@@ -84,16 +88,8 @@ namespace Walk_Every_Day
                 }
                 else if (usersData != null)
                 {
-                    //MessageBox.Show(ShowUsersData());               // Debug
-
                     UserListListBox.ItemsSource = MakeUserList(usersData);
-
-
-                    //  Create list events and graph 
-
                 }
-
-                //MessageBox.Show(viewModel.ShowInputAllDaysData());                          // Debug
             }
         }
 
@@ -153,24 +149,162 @@ namespace Walk_Every_Day
 
         private void UserListListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            DeleteGraph();
 
-            if (UserListSelectedIndex >= 0)
+            if (UserListSelectedIndex >= 0 && usersData != null)
             {
-                //GraphTextBox.Text = UserListSelectedIndex.ToString();                                           // Debug
-
-                // Create graph
-            }
-            else
-            {
-                // Clear graph
+                int[] graphBorders = GraphBorders(UserListSelectedIndex, usersData);
+                CreateGraph(graphBorders[0], graphBorders[1], 2, graphBorders[2], graphBorders[3], 5000, Points(UserListSelectedIndex, usersData));
             }
 
+            int[] GraphBorders(int userIndex, List<OutputUserDataItem> usersData)
+            {
+                int daysQuantity = usersData[userIndex].UserDayDataList.Count;
+
+                int firstDay = usersData[userIndex].UserDayDataList[0].Day;
+
+                int lastDay;
+                if (daysQuantity == 1)
+                {
+                    lastDay = firstDay + 1;
+                }
+                else
+                {
+                    lastDay = usersData[userIndex].UserDayDataList[daysQuantity - 1].Day;
+                }
+
+                int minSteps = usersData[userIndex].MinSteps;
+                int maxSteps = usersData[userIndex].MaxSteps;
+
+                return new int[4] { firstDay, lastDay, minSteps, maxSteps };
+            }
+
+            List<IntegerPoint> Points(int userIndex, List<OutputUserDataItem> usersData)
+            {
+                List<IntegerPoint> points = new List<IntegerPoint>();
+
+                int inListDaysQuantity = usersData[userIndex].UserDayDataList.Count;
+
+                int firstDay = usersData[userIndex].UserDayDataList[0].Day;
+
+                if (inListDaysQuantity == 1)
+                {
+                    int steps = usersData[userIndex].UserDayDataList[0].Steps;
+                    points.Add(new IntegerPoint(firstDay, steps));
+                    points.Add(new IntegerPoint(firstDay + 1, 0));
+                }
+                else
+                {
+                    int lastDay = usersData[userIndex].UserDayDataList[inListDaysQuantity - 1].Day;
+
+                    int inListCounter = 0;
+                    int currentDay = firstDay;
+
+                    while (currentDay <= lastDay && inListCounter < inListDaysQuantity)
+                    {
+                        if (currentDay == usersData[userIndex].UserDayDataList[inListCounter].Day)
+                        {
+                            int steps = usersData[userIndex].UserDayDataList[inListCounter].Steps;
+
+                            points.Add(new IntegerPoint(currentDay, steps));
+                            inListCounter++;
+                        }
+                        else
+                        {
+                            points.Add(new IntegerPoint(currentDay, 0));
+                        }
+
+                        currentDay++;
+                    }
+                }
+
+                return points;
+            }
+        }
+
+        private void CreateGraph(int leftX, int rightX, int stepX, int bottomY, int topY, int stepY, List<IntegerPoint> points)
+        {
+            GraphDrawingImage graph = new GraphDrawingImage(
+                leftX, rightX, stepX, 0, topY, stepY,
+                points,
+                Brushes.Black, Brushes.LightGray, Brushes.LightSalmon,
+                3);
+
+            CreateColumnValuesGrid();
+            CreateRowValuesGrid();
+
+            GraphGrid.Children.Add(graph.GridLines);
+            GraphGrid.Children.Add(graph.ValueLines);
+            GraphGrid.Children.Add(graph.CoordinateLines);
+            GraphGrid.Children.Add(graph.MaxValuePoint);
+            GraphGrid.Children.Add(graph.MinValuePoint);
+
+            void CreateColumnValuesGrid()
+            {
+                TextBlock textBlock;
+
+                int count = 0;
+
+                for (int value = graph.TopY; value >= graph.BottomY; value -= graph.StepY)
+                {
+                    ColumnValuesGrid.RowDefinitions.Add(new RowDefinition());
+
+                    textBlock = new TextBlock();
+                    textBlock.Text = value.ToString();
+                    Grid.SetRow(textBlock, count);
+                    ColumnValuesGrid.Children.Add(textBlock);
+                    count++;
+                }
+            }
+
+            void CreateRowValuesGrid()
+            {
+                TextBlock textBlock;
+
+                int count = 0;
+
+                for (int value = graph.LeftX; value <= graph.RightX; value += graph.StepX)
+                {
+                    RowValuesGrid.ColumnDefinitions.Add(new ColumnDefinition());
+
+                    textBlock = new TextBlock();
+                    textBlock.Text = value.ToString();
+                    Grid.SetColumn(textBlock, count);
+                    textBlock.HorizontalAlignment = HorizontalAlignment.Center;
+                    RowValuesGrid.Children.Add(textBlock);
+                    count++;
+                }
+            }
+        }
+
+        private void DeleteGraph()
+        {
+            GraphGrid.Children.Clear();
+            ColumnValuesGrid.Children.Clear();
+            ColumnValuesGrid.RowDefinitions.Clear();
+            RowValuesGrid.Children.Clear();
+            RowValuesGrid.ColumnDefinitions.Clear();
         }
 
         private void ExportDataButton_Click(object sender, RoutedEventArgs e)
         {
+            if (UserListSelectedIndex >= 0 && usersData != null)
+            {
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Filter = "JSON files (*.json)|*.json";
+                saveFileDialog.FileName = "Export.json";
 
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    ExportCurrentUserData(UserListSelectedIndex, saveFileDialog.FileName);
+
+                    if (viewModel.IsError)
+                        HandleError();
+                }
+            }
         }
+
+        private void ExportCurrentUserData(int userIndex, string filePath) => viewModel.SaveCurrentUserData(userIndex, filePath);
 
         private void DeviationSetButton_Click(object sender, RoutedEventArgs e)
         {
@@ -184,6 +318,8 @@ namespace Walk_Every_Day
             {
                 SetStepsDeviationValue(stepsDeviationInProcents);
             }
+
+            DeleteGraph();
 
             UserListListBox.ItemsSource = MakeUserList(usersData);
 
@@ -208,31 +344,6 @@ namespace Walk_Every_Day
         {
             stepsDeviationInProcents = value;
             DeviationTextBox.Text = stepsDeviationInProcents.ToString();
-        }
-
-        private string ShowUsersData()             // Debug
-        {
-            StringBuilder outputData = new StringBuilder();
-
-            outputData.AppendLine("Output data");
-
-            for (int i = 0; i < 7/*OutputAllUsersData.Count*/; i++)
-            {
-                outputData.Append(Environment.NewLine + Environment.NewLine + "User: " + usersData[i].User);
-                outputData.Append(Environment.NewLine + "AverageSteps: " + usersData[i].AverageSteps);
-                outputData.Append(Environment.NewLine + "MaxSteps: " + usersData[i].MaxSteps);
-                outputData.Append(Environment.NewLine + "MinSteps: " + usersData[i].MinSteps);
-
-                for (int j = 0; j < usersData[i].UserDayDataList.Count; j++)
-                {
-                    outputData.Append(Environment.NewLine + "Day: " + usersData[i].UserDayDataList[j].Day);
-                    outputData.Append("     Rank: " + usersData[i].UserDayDataList[j].Rank);
-                    outputData.Append("     Status: " + usersData[i].UserDayDataList[j].Status);
-                    outputData.Append("     Steps: " + usersData[i].UserDayDataList[j].Steps);
-                }
-            }
-
-            return outputData.ToString();
         }
 
         public class ExtendedItem : OutputUserDataItem

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Unicode;
 using System.Threading.Tasks;
 using Walk_Every_Day.DataTypes;
 
@@ -18,15 +20,15 @@ namespace Walk_Every_Day
 
         public Model() { }
 
-        public bool IsError() => IsFileReadingError | IsInputDataWrong | IsDayParsingError;
+        public bool IsError() => IsFileReadingError | IsInputDataWrong | IsDayParsingError | IsFileWritingError;
 
         public bool IsFileReadingError { get; private set; } = false;
+
+        public bool IsFileWritingError { get; private set; } = false;
 
         public bool IsInputDataWrong { get; private set; } = false;
 
         public bool IsDayParsingError { get; private set; } = false;
-
-        public List<List<InputDayDataItem>> InputAllDaysData { get => inputAllDaysData; }     // Debug
 
         private void ResetAllDataStructures()
         {
@@ -50,23 +52,20 @@ namespace Walk_Every_Day
 
         public List<OutputUserDataItem> GetData()
         {
+            ResetErrors();
+
             if (filePaths != null && filePaths.Count > 0)
             {
-                ResetErrors();
-
                 ReadDataFiles();
                 ConvertDataStructure();
                 CalculateAverageMaxAndMinSteps();
             }
+            else
+            {
+                IsFileReadingError = true;
+            }
 
             return outputAllUsersData;
-
-            void ResetErrors()
-            {
-                IsFileReadingError = false;
-                IsInputDataWrong = false;
-                IsDayParsingError = false;
-            }
         }
 
         private void ReadDataFiles()
@@ -234,6 +233,55 @@ namespace Walk_Every_Day
             }
 
             return dayDataItems;
+        }
+
+        public void SaveCurrentUserData(int userIndex, string filePath)
+        {
+            ResetErrors();
+
+            if (filePath != null)
+            {
+                SaveUserDataFile(outputAllUsersData[userIndex], filePath);
+            }
+            else
+            {
+                IsFileWritingError = true;
+            }
+        }
+
+        private void SaveUserDataFile(OutputUserDataItem userData, string filePath)
+        {
+            StreamWriter streamWriter = null;
+
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+                };
+
+                streamWriter = new StreamWriter(filePath);
+                string jsonText = JsonSerializer.Serialize(userData, options);
+
+                streamWriter.Write(jsonText);
+            }
+            catch (IOException)
+            {
+                IsFileWritingError = true;
+            }
+            finally
+            {
+                streamWriter?.Dispose();
+            }
+        }
+
+        private void ResetErrors()
+        {
+            IsFileReadingError = false;
+            IsFileWritingError = false;
+            IsInputDataWrong = false;
+            IsDayParsingError = false;
         }
     }
 }
